@@ -1,0 +1,29 @@
+server:
+  port: 9010
+
+spring:
+  application:
+    name: anticipa-dashboard-dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+anticipa:
+  nacos-addr: http://localhost:8848
+  namespaces:
+    - public
+  nacos-username:
+  nacos-password:
+
+sa-token:
+  token-name: Authorization
+  timeout: 2592000
+  active-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: false
+  jwt-secret-key: anticipa-dashboard-dev-secret-key

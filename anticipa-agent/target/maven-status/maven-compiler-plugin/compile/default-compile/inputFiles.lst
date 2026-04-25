@@ -1,0 +1,17 @@
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\safety\SafetyVerdict.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\AgentLoop.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\llm\AIClient.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\llm\dto\LLMRequest.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\approval\ApprovalRequest.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\config\AgentAutoConfiguration.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\approval\ApprovalService.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\safety\SafetyGuard.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\audit\AuditStore.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\approval\ApprovalDecision.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\ToolRegistry.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\llm\dto\LLMResponse.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\ToolDefinition.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\session\SessionManager.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\config\AgentProperties.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\llm\OpenAIClient.java
+C:\Users\16369\Desktop\Anticipa\anticipa-agent\src\main\java\com\baomihuahua\anticipa\agent\ToolResult.java

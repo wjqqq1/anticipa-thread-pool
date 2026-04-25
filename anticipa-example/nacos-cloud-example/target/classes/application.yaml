@@ -1,0 +1,60 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: nacos-cloud-example${unique-name:}
+  config:
+    import: optional:nacos:onethread-nacos-cloud-example${unique-name:}.yaml?namespaceId=thread-test
+  profiles:
+    active: dev
+
+  cloud:
+    nacos:
+      config:
+        username: nacos
+        password: nacos
+        file-extension: yaml
+        extension-configs:
+          - data-id: onethread-nacos-cloud-example${unique-name:}.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+      server-addr: common-nacos-dev.magestack.cn:8848
+      discovery:
+        server-addr: common-nacos-dev.magestack.cn:8848
+        username: nacos
+        password: nacos
+        namespace: thread-test
+
+# AI 模块配置
+onethread:
+  ai:
+    # 是否启用 AI 功能
+    enable: true
+    # AI 提供商: OPENAI, CLAUDE
+    provider: OPENAI
+    # OpenAI 配置
+    openai:
+      # API Key
+      api-key: sk-Qd4IcodQr0E6y202G0c38sDVwvoQKtK2rr3cPv6badQKmfm4
+      # API Base URL
+      base-url: https://jeniya.cn/v1
+      # 模型名称
+      model: gpt-4.1-mini
+      # 最大 Token 数
+      max-tokens: 2000
+      # 温度参数 (0-2)
+      temperature: 0.7
+
+# 开启 actuator endpoint 指标暴露
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - prometheus             # 暴露 Prometheus 端点
+  metrics:
+    prometheus:
+      metrics:
+        export:
+          enabled: true            # 启用 Prometheus 导出

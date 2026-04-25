@@ -1,0 +1,8 @@
+com\baomihuahua\anticipa\spring\base\configuration\AnticipaBaseConfiguration.class
+com\baomihuahua\anticipa\spring\base\DynamicThreadPool.class
+com\baomihuahua\anticipa\spring\base\enable\EnableAnticipa.class
+com\baomihuahua\anticipa\spring\base\support\AnticipaBeanPostProcessor.class
+com\baomihuahua\anticipa\spring\base\enable\MarkerConfiguration$Marker.class
+com\baomihuahua\anticipa\spring\base\enable\MarkerConfiguration.class
+com\baomihuahua\anticipa\spring\base\support\SpringPropertiesLoader.class
+com\baomihuahua\anticipa\spring\base\support\ApplicationContextHolder.class

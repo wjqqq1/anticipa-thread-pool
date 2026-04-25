@@ -1,0 +1,50 @@
+# 在 Nacos 创建 data-id 为 {onethread.nacos.data-id} 和 {onethread.nacos.group} 的配置文件
+# 并将下述配置复制到该文件中
+onethread:
+  nacos:
+    data-id: onethread-nacos-cloud-example-wjq.yaml
+    # data-id 和 spring.cloud.nacos.config.extension-configs[0].data-id 保持一致
+    # 如果使用星球公用 Nacos，这里 xxx 改成 unique-name 值
+    # 比如我的 unique-name 为 -ding-ma，此处 data-id 就是 onethread-nacos-cloud-example-ding-ma.yaml
+    group: DEFAULT_GROUP
+  config-file-type: yaml
+  web:
+    core-pool-size: 10
+    maximum-pool-size: 200
+    keep-alive-time: 60
+    notify:
+      receives: xxx
+  notify-platforms:
+    platform: DING
+    url: 钉钉机器人完整Webhook，比如：https://oapi.dingtalk.com/robot/send?access_token=xxx
+  executors:
+    - thread-pool-id: onethread-producer
+      core-pool-size: 12
+      maximum-pool-size: 24
+      keep-alive-time: 19999
+      work-queue: ResizableCapacityLinkedBlockingQueue
+      queue-capacity: 10000
+      rejected-handler: CallerRunsPolicy
+      allow-core-thread-time-out: false
+      notify:
+        receives: xxx
+        interval: 5
+      alarm:
+        enable: true
+        queue-threshold: 80
+        active-threshold: 80
+    - thread-pool-id: onethread-consumer
+      core-pool-size: 10
+      maximum-pool-size: 20
+      keep-alive-time: 9999
+      work-queue: LinkedBlockingQueue
+      queue-capacity: 1024
+      rejected-handler: AbortPolicy
+      allow-core-thread-time-out: true
+      notify:
+        receives: xxx
+        interval: 5
+      alarm:
+        enable: true
+        queue-threshold: 80
+        active-threshold: 80
