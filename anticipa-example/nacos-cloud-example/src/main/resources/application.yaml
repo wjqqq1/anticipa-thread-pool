@@ -1,50 +1,34 @@
 server:
+  # address: 127.0.0.1 这个地方如果不指定的话 那么默认同时监听 localhost 和 网卡IP
   port: 18080
 
 spring:
   application:
     name: nacos-cloud-example${unique-name:}
   config:
-    import: optional:nacos:onethread-nacos-cloud-example${unique-name:}.yaml?namespaceId=thread-test
+    import: optional:nacos:anticipa-nacos-cloud-example${unique-name:}.yaml?namespaceId=thread-test # 记得配置namespace
   profiles:
     active: dev
 
   cloud:
     nacos:
-      config:
+      config:  # 记得配置namespace
+        namespace: thread-test
         username: nacos
         password: nacos
         file-extension: yaml
         extension-configs:
-          - data-id: onethread-nacos-cloud-example${unique-name:}.yaml
+          - data-id: anticipa-nacos-cloud-example${unique-name:}.yaml
             group: DEFAULT_GROUP
             refresh: true
       server-addr: common-nacos-dev.magestack.cn:8848
-      discovery:
+      discovery:  # 记得配置namespace
         server-addr: common-nacos-dev.magestack.cn:8848
         username: nacos
         password: nacos
         namespace: thread-test
 
-# AI 模块配置
-onethread:
-  ai:
-    # 是否启用 AI 功能
-    enable: true
-    # AI 提供商: OPENAI, CLAUDE
-    provider: OPENAI
-    # OpenAI 配置
-    openai:
-      # API Key
-      api-key: sk-Qd4IcodQr0E6y202G0c38sDVwvoQKtK2rr3cPv6badQKmfm4
-      # API Base URL
-      base-url: https://jeniya.cn/v1
-      # 模型名称
-      model: gpt-4.1-mini
-      # 最大 Token 数
-      max-tokens: 2000
-      # 温度参数 (0-2)
-      temperature: 0.7
+
 
 # 开启 actuator endpoint 指标暴露
 management:
@@ -58,3 +42,19 @@ management:
       metrics:
         export:
           enabled: true            # 启用 Prometheus 导出
+
+# 线程池运行日志配置
+anticipa:
+  nacos: # 这个配置一定要有 否则nacos刷新不了
+    data-id: anticipa-nacos-cloud-example${unique-name:}.yaml
+    group: DEFAULT_GROUP
+  config-file-type: yaml
+  web:
+    notify:
+      receives: xxx
+  log:
+    enabled: true                  # 开启日志记录（与 @EnableThreadPoolLog 注解二选一即可，此处双重保障）
+    record-interval-seconds: 10    # 采集间隔 10 秒
+    retention-days: 7              # 日志保留 7 天
+    compress: true                 # 压缩旧日志
+    store-path: data/logs          # 日志存储路径

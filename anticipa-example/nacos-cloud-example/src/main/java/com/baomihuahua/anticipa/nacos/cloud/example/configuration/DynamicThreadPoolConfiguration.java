@@ -13,15 +13,15 @@ public class DynamicThreadPoolConfiguration {
 
     @Bean
     @DynamicThreadPool
-    public ThreadPoolExecutor onethreadProducer() {
+    public ThreadPoolExecutor anticipaProducer() {
         return ThreadPoolExecutorBuilder.builder()
-                .threadPoolId("onethread-producer")
+                .threadPoolId("anticipa-producer")
                 .corePoolSize(2)
                 .maximumPoolSize(4)
                 .keepAliveTime(9999L)
                 .awaitTerminationMillis(5000L)
                 .workQueueType(BlockingQueueTypeEnum.SYNCHRONOUS_QUEUE)
-                .threadFactory("onethread-producer_")
+                .threadFactory("anticipa-producer_")
                 .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
                 .dynamicPool()
                 .build();
@@ -29,15 +29,31 @@ public class DynamicThreadPoolConfiguration {
 
     @Bean
     @DynamicThreadPool
-    public ThreadPoolExecutor onethreadConsumer() {
+    public ThreadPoolExecutor anticipaConsumer() {
         return ThreadPoolExecutorBuilder.builder()
-                .threadPoolId("onethread-consumer")
+                .threadPoolId("anticipa-consumer")
                 .corePoolSize(4)
                 .maximumPoolSize(6)
                 .keepAliveTime(9999L)
                 .workQueueType(BlockingQueueTypeEnum.SYNCHRONOUS_QUEUE)
-                .threadFactory("onethread-consumer_")
+                .threadFactory("anticipa-consumer_")
                 .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+                .dynamicPool()
+                .build();
+    }
+
+    @Bean
+    @DynamicThreadPool
+    public ThreadPoolExecutor anticipaOrderHandler() {
+        return ThreadPoolExecutorBuilder.builder()
+                .threadPoolId("anticipa-order-handler")
+                .corePoolSize(4)
+                .maximumPoolSize(8)
+                .keepAliveTime(60L)
+                .workQueueType(BlockingQueueTypeEnum.RESIZABLE_CAPACITY_LINKED_BLOCKING_QUEUE)
+                .workQueueCapacity(200)
+                .threadFactory("anticipa-order_")
+                .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())
                 .dynamicPool()
                 .build();
     }

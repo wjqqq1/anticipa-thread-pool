@@ -5,9 +5,11 @@ import com.baomihuahua.anticipa.core.config.BootstrapConfigProperties;
 import com.baomihuahua.anticipa.core.notification.service.NotifierDispatcher;
 import com.baomihuahua.anticipa.spring.base.configuration.AnticipaBaseConfiguration;
 import com.baomihuahua.anticipa.spring.base.enable.MarkerConfiguration;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -26,12 +28,22 @@ import org.springframework.core.env.Environment;
 public class CommonAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
     public BootstrapConfigProperties bootstrapConfigProperties(Environment environment) {
         BootstrapConfigProperties bootstrapConfigProperties = Binder.get(environment)
                 .bind(BootstrapConfigProperties.PREFIX, Bindable.of(BootstrapConfigProperties.class))
-                .get();
+                .orElse(new BootstrapConfigProperties());
         BootstrapConfigProperties.setInstance(bootstrapConfigProperties);
         return bootstrapConfigProperties;
+    }
+
+    /**
+     * 当 BootstrapConfigProperties 由 @EnableConfigurationProperties 创建时，
+     * 通过该 InitializingBean 确保静态单例 setInstance() 被调用。
+     */
+    @Bean
+    public InitializingBean bootstrapConfigPropertiesInit(BootstrapConfigProperties properties) {
+        return () -> BootstrapConfigProperties.setInstance(properties);
     }
 
     @Bean
@@ -40,7 +52,7 @@ public class CommonAutoConfiguration {
     }
 
     @Bean
-    public AnticipaBannerHandler oneThreadBannerHandler(ObjectProvider<BuildProperties> buildProperties) {
+    public AnticipaBannerHandler anticipaBannerHandler(ObjectProvider<BuildProperties> buildProperties) {
         return new AnticipaBannerHandler(buildProperties.getIfAvailable());
     }
 }

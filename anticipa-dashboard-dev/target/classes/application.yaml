@@ -1,4 +1,5 @@
 server:
+  address: 127.0.0.1
   port: 9010
 
 spring:
@@ -12,18 +13,84 @@ spring:
       static-locations: classpath:/static/
 
 anticipa:
-  nacos-addr: http://localhost:8848
+  users: # 用户名密码对，格式: username,password
+    - admin,admin
+    - test,test
+    - wjq,wjq
+  nacos-addr: http://common-nacos-dev.magestack.cn:8848
   namespaces:
     - public
-  nacos-username:
-  nacos-password:
+    - thread-test
+  nacos-username: nacos
+  nacos-password: nacos
+  exclude-paths:
+    - /static/
+    - /api/anticipa-dashboard/auth/login
+  # ─── Grafana 监控面板配置 ───
+  grafana:
+    # Grafana 仪表盘地址，替换为你部署的 Grafana 面板 URL
+    # URL 中可包含变量参数，如 var-application_name, var-dynamic_thread_pool_id, refresh, theme, kiosk 等
+    url: http://localhost:3000/d/onethread-dashboard?orgId=1&from=now-6h&to=now&timezone=browser&var-application_name=nacos-cloud-example&var-dynamic_thread_pool_id=onethread-consumer&refresh=5s&theme=light&kiosk=true
+  # ─── AI Agent 模块配置 ───
+  agent:
+    enabled: true                        # 是否启用AI Agent模块
+    model: gpt-4.1-mini                         # LLM模型名称
+    api-key: sk-DPjqwaoAcugFahMulModR1ZvpQ3gu2DVuNVh7t2HQbG4GJM1                            # OpenAI API密钥（必填）
+    base-url: https://jeniya.cn/    # OpenAI兼容接口基础URL
+    api-token:                           # API令牌（部分服务商需要）
+    max-iterations: 15                   # Agent最大循环次数
+    # ─── 数据存储路径 ───
+    store-path: data/agent               # 定时任务和数据存储根路径
+    knowledge-path: data/knowledge       # 知识库文件路径
+    memory-path: data/memory             # 长期记忆持久化路径
+    # ─── 上下文与Token预算 ───
+    max-token-budget: 128000             # 单次请求最大Token预算
+    compact-threshold: 13000             # 上下文压缩触发阈值（Token数）
+    tool-result-max-tokens: 2000         # 工具返回结果最大Token截断
+    # ─── 知识库检索 ───
+    knowledge-top-k: 3                   # 知识检索返回文档数
+    auto-init-builtin-knowledge: true    # 启动时是否自动初始化内置知识库
+    # ─── 工具搜索 ───
+    tool-search-enabled: true            # 是否启用工具语义搜索
+    max-tools-per-request: 8             # 单次请求最大工具数
+    tool-search-fallback-to-all: true    # 搜索失败时是否回退到全部工具
+    # ─── 重试策略 ───
+    max-retries: 3                       # LLM调用最大重试次数
+    initial-retry-delay-ms: 1000         # 首次重试延迟（毫秒）
+    retry-backoff-multiplier: 2.0        # 重试退避倍数
+    # ─── 权限规则 ───
+    permissions-path:                    # 权限规则文件路径（留空则使用默认规则）
+    # ─── Nacos 远程模式 ───
+    nacos:
+      enabled: true                      # 启用 Nacos 远程模式（控制台必须开启）
+      addr: http://common-nacos-dev.magestack.cn:8848   # Nacos 地址
+      namespaces:                        # 命名空间列表
+        - public
+        - thread-test
+      username: nacos
+      password: nacos
+  #  拒绝策略线程池通知策略
+  rejected-analysis:
+    enabled: true
+    policy-name: AiAnalysisRejectedPolicy
+    ding-talk:
+      enabled: true
+      webhook-url: https://oapi.dingtalk.com/robot/send?access_token=44975da03f4af751b0d0c51ed106e2f399c14189125eecdda8537b96fa1ee409
+      secret: SEC5bbcd71f11b262301ec9510df0df3437309f7f5ed15875d44c20925356b0ce7c
+      title: "🚨 线程池拒绝告警"
+      notify-on-reject: true
+
 
 sa-token:
-  token-name: Authorization
+  token-name: token
   timeout: 2592000
   active-timeout: -1
   is-concurrent: true
   is-share: true
+  is-read-body: true
+  is-read-header: true
+  is-read-cookie: false
   token-style: uuid
   is-log: false
-  jwt-secret-key: anticipa-dashboard-dev-secret-key
+  is-color-log: false
+  is-print: false

@@ -5,16 +5,19 @@ import com.baomihuahua.anticipa.core.parser.ConfigFileTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 配置中心参数
  */
 @Data
+@ConfigurationProperties(prefix = "anticipa")
 public class BootstrapConfigProperties {
 
-    public static final String PREFIX = "onethread";
+    public static final String PREFIX = "anticipa";
 
     /**
      * 是否开启动态线程池开关
@@ -54,7 +57,7 @@ public class BootstrapConfigProperties {
     /**
      * 线程池配置集合
      */
-    private List<ThreadPoolExecutorProperties> executors;
+    private List<ThreadPoolExecutorProperties> executors = new ArrayList<>();
 
     @Data
     public static class NotifyPlatformsConfig {

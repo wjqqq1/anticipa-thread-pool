@@ -19,7 +19,7 @@ import com.baomihuahua.anticipa.dashboard.dev.server.remote.client.NacosProxyCli
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigDetailRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigListRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigRespDTO;
-import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceListRespDTO;
+import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.service.ThreadPoolManagerService;
 import com.baomihuahua.anticipa.dashboard.dev.server.service.handler.YamlConfigParser;
 import lombok.RequiredArgsConstructor;
@@ -61,42 +61,50 @@ public class ThreadPoolManagerServiceImpl implements ThreadPoolManagerService {
         String requestedNamespace = requestParam.getNamespace();
         String requestedServiceName = requestParam.getServiceName();
 
-        // 如果指定了 namespace，直接使用 Nacos 分页查询
-        if (StrUtil.isNotBlank(requestedNamespace) && anticipaProperties.getNamespaces().contains(requestedNamespace)) {
-            NacosConfigListRespDTO nacosPage = nacosProxyClient.listConfigWithTotal(requestedNamespace, pageReq.getPage(), pageReq.getSize());
-            if (nacosPage == null || CollUtil.isEmpty(nacosPage.getPageItems())) {
-                return PageDTO.of(new ArrayList<>(), 0);
+        // 指定了命名空间时，直接将分页参数下推到 Nacos 配置查询 API
+        if (StrUtil.isNotBlank(requestedNamespace)) {
+            NacosConfigListRespDTO configResp = nacosProxyClient.listConfigWithTotal(
+                    requestedNamespace, pageReq.getPage(), pageReq.getSize(), requestedServiceName);
+
+            List<ThreadPoolDetailRespDTO> results = new ArrayList<>();
+            if (CollUtil.isNotEmpty(configResp.getPageItems())) {
+                configResp.getPageItems().stream()
+                        .filter(each -> StrUtil.isNotBlank(each.getAppName()))
+                        .filter(each -> StrUtil.isBlank(requestedServiceName) || Objects.equals(each.getAppName(), requestedServiceName))
+                        .map(cfg -> buildThreadPoolDetail(requestedNamespace, cfg))
+                        .filter(Objects::nonNull)
+                        .flatMap(List::stream)
+                        .forEach(results::add);
             }
 
-            List<ThreadPoolDetailRespDTO> records = nacosPage.getPageItems().stream()
-                    .filter(each -> StrUtil.isNotBlank(each.getAppName()))
-                    .filter(each -> StrUtil.isBlank(requestedServiceName) || Objects.equals(each.getAppName(), requestedServiceName))
-                    .map(config -> buildThreadPoolDetail(requestedNamespace, config))
-                    .filter(Objects::nonNull)
-                    .flatMap(List::stream)
-                    .collect(Collectors.toList());
-
-            return PageDTO.of(records, nacosPage.getTotalCount());
+            return PageDTO.of(results, results.size());
         }
 
-        // 未指定 namespace：全量拉取后手动分页
-        List<ThreadPoolDetailRespDTO> all = buildThreadPoolList(requestParam);
-        int offset = pageReq.getOffset();
-        int size = pageReq.getSize();
-        int total = all.size();
+        // 未指定命名空间时，遍历所有命名空间分别查询并汇总
+        List<String> namespaces = new ArrayList<>(anticipaProperties.getNamespaces());
+        List<ThreadPoolDetailRespDTO> results = new ArrayList<>();
 
-        if (offset >= total) {
-            return PageDTO.of(new ArrayList<>(), total);
+        for (String namespace : namespaces) {
+            NacosConfigListRespDTO configResp = nacosProxyClient.listConfigWithTotal(
+                    namespace, pageReq.getPage(), pageReq.getSize(), requestedServiceName);
+
+            if (CollUtil.isNotEmpty(configResp.getPageItems())) {
+                configResp.getPageItems().stream()
+                        .filter(each -> StrUtil.isNotBlank(each.getAppName()))
+                        .filter(each -> StrUtil.isBlank(requestedServiceName) || Objects.equals(each.getAppName(), requestedServiceName))
+                        .map(cfg -> buildThreadPoolDetail(namespace, cfg))
+                        .filter(Objects::nonNull)
+                        .flatMap(List::stream)
+                        .forEach(results::add);
+            }
         }
 
-        int toIndex = Math.min(offset + size, total);
-        return PageDTO.of(all.subList(offset, toIndex), total);
+        return PageDTO.of(results, results.size());
     }
 
     private List<ThreadPoolDetailRespDTO> buildThreadPoolList(ThreadPoolListReqDTO requestParam) {
-        // 处理 namespace 过滤
         List<String> namespaces = new ArrayList<>(anticipaProperties.getNamespaces());
-        String requestedNamespace = requestParam.getNamespace();
+        String requestedNamespace = requestParam.getNamespace() == null ? "public" : requestParam.getNamespace();
         String requestedServiceName = requestParam.getServiceName();
         if (StrUtil.isNotBlank(requestedNamespace) && namespaces.contains(requestedNamespace)) {
             namespaces = Collections.singletonList(requestedNamespace);
@@ -106,7 +114,7 @@ public class ThreadPoolManagerServiceImpl implements ThreadPoolManagerService {
         List<Map.Entry<String, NacosConfigRespDTO>> tasks = namespaces
                 .parallelStream()
                 .flatMap(ns -> {
-                    List<NacosConfigRespDTO> cfgs = nacosProxyClient.listConfig(ns);
+                    List<NacosConfigRespDTO> cfgs = nacosProxyClient.listConfig(ns, 1, 100);
                     if (CollUtil.isEmpty(cfgs)) {
                         return Stream.<Map.Entry<String, NacosConfigRespDTO>>empty();
                     }
@@ -134,22 +142,29 @@ public class ThreadPoolManagerServiceImpl implements ThreadPoolManagerService {
             ConfigurationPropertySource sources = new MapConfigurationPropertySource(configInfoMap);
             Binder binder = new Binder(sources);
 
+            // 先尝试 anticipa 前缀，再尝试 onethread 前缀，最后尝试根层级（兼容无前缀的配置）
             BindResult<DashBoardConfigProperties> bound =
                     binder.bind("anticipa", Bindable.of(DashBoardConfigProperties.class));
+            if (!bound.isBound()) {
+                bound = binder.bind("onethread", Bindable.of(DashBoardConfigProperties.class));
+            }
+            if (!bound.isBound()) {
+                bound = binder.bind("", Bindable.of(DashBoardConfigProperties.class));
+            }
             if (!bound.isBound()) {
                 return null;
             }
 
             DashBoardConfigProperties refresherProperties = bound.get();
 
-            NacosServiceListRespDTO service = nacosProxyClient.getService(namespace, config.getAppName());
+            List<NacosServiceRespDTO> instances = nacosProxyClient.listInstances(namespace, config.getAppName());
 
             refresherProperties.getExecutors().forEach(each -> {
                 each.setNamespace(namespace);
                 each.setServiceName(config.getAppName());
                 each.setDataId(config.getDataId());
                 each.setGroup(config.getGroup());
-                each.setInstanceCount(service != null ? service.getCount() : 0);
+                each.setInstanceCount(instances != null ? instances.size() : 0);
             });
 
             return refresherProperties.getExecutors();
@@ -170,7 +185,9 @@ public class ThreadPoolManagerServiceImpl implements ThreadPoolManagerService {
 
         Binder binder = new Binder(source);
         DashBoardConfigProperties anticipa = binder.bind("anticipa", Bindable.of(DashBoardConfigProperties.class))
-                .orElseThrow(() -> new RuntimeException("binding failed"));
+                .orElseGet(() -> binder.bind("onethread", Bindable.of(DashBoardConfigProperties.class))
+                        .orElseGet(() -> binder.bind("", Bindable.of(DashBoardConfigProperties.class))
+                                .orElseThrow(() -> new RuntimeException("binding failed"))));
 
         // 查找要更新的线程池，并记录原始值用于对比
         ThreadPoolDetailRespDTO originalPool = null;
@@ -200,9 +217,6 @@ public class ThreadPoolManagerServiceImpl implements ThreadPoolManagerService {
                     e.setNotify(BeanUtil.toBean(requestParam.getNotify(), ThreadPoolDetailRespDTO.NotifyConfig.class));
                     e.setAlarm(BeanUtil.toBean(requestParam.getAlarm(), ThreadPoolDetailRespDTO.AlarmConfig.class));
                 });
-
-        Map<String, Object> updatedMap = new LinkedHashMap<>();
-        updatedMap.put("anticipa", anticipa);
 
         YAMLFactory factory = new YAMLFactory();
         factory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);

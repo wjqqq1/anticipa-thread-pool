@@ -32,6 +32,9 @@ public enum ConfigFileTypeEnum {
      * @return 配置类型枚举
      */
     public static ConfigFileTypeEnum of(String type) {
+        if (type == null || type.isBlank()) {
+            return YAML; // 默认使用 YAML 格式
+        }
         for (ConfigFileTypeEnum value : values()) {
             if (value.type.equalsIgnoreCase(type)) {
                 return value;

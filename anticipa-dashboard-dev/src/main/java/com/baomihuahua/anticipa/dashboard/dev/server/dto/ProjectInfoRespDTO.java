@@ -15,5 +15,11 @@ public class ProjectInfoRespDTO {
 
     private String serviceName;
 
+    private Integer threadPoolCount;
+
     private Integer instanceCount;
+
+    private Boolean hasWebThreadPool;
+
+    private Long updateTime;
 }

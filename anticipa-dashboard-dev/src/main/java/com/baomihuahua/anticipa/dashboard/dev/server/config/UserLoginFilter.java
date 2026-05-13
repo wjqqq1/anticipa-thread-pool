@@ -1,7 +1,6 @@
 package com.baomihuahua.anticipa.dashboard.dev.server.config;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class UserLoginFilter implements Filter {
 
-    private static final String AI_API_PREFIX = "/api/ai";
+    private final AnticipaProperties anticipaProperties;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -29,11 +28,16 @@ public class UserLoginFilter implements Filter {
 
         String requestUri = request.getRequestURI();
 
-        // 静态资源和 AI 接口开放访问
-        if (requestUri.startsWith("/static/")
-                || requestUri.startsWith("/ai/")
-                || requestUri.startsWith(AI_API_PREFIX)
-                || requestUri.equals("/") && request.getMethod().equals("GET")) {
+        // 根据配置的免登录路径前缀白名单放行
+        for (String excludePath : anticipaProperties.getExcludePaths()) {
+            if (requestUri.startsWith(excludePath)) {
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+        }
+
+        // 根路径 GET 请求放行
+        if (requestUri.equals("/") && request.getMethod().equals("GET")) {
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }

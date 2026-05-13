@@ -17,13 +17,9 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    @GetMapping("/api/anticipa-dashboard/project/list")
-    public Result<List<ProjectInfoRespDTO>> listProject() {
-        return Result.success(projectService.listProject());
-    }
-
-    @GetMapping("/api/projects")
+    @GetMapping("/api/anticipa-dashboard/projects")
     public Result<PageDTO<ProjectInfoRespDTO>> listProjectPage(PageReqDTO pageReq) {
         return Result.success(projectService.listProjectPage(pageReq));
     }
+
 }

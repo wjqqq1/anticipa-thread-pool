@@ -29,6 +29,29 @@ public class AuditStore {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 多维度查询审计记录。
+     *
+     * @param sessionId   会话 ID（可选）
+     * @param toolName    工具名（可选，支持前缀匹配，如 "adjust_" 匹配 adjust_thread_pool）
+     * @param threadPoolId 线程池 ID（可选，从 params.thread_pool_id 中匹配）
+     * @param limit       返回条数上限
+     * @return 匹配的审计记录列表
+     */
+    public List<AuditRecord> search(String sessionId, String toolName, String threadPoolId, int limit) {
+        return records.stream()
+                .filter(r -> sessionId == null || sessionId.isEmpty() || sessionId.equals(r.getSessionId()))
+                .filter(r -> toolName == null || toolName.isEmpty()
+                        || toolName.equals(r.getToolName())
+                        || (toolName.endsWith("_") && r.getToolName() != null && r.getToolName().startsWith(toolName))
+                        || (toolName.endsWith("*") && r.getToolName() != null && r.getToolName().startsWith(toolName.substring(0, toolName.length() - 1))))
+                .filter(r -> threadPoolId == null || threadPoolId.isEmpty()
+                        || (r.getParams() != null && threadPoolId.equals(String.valueOf(r.getParams().get("thread_pool_id")))))
+                .skip(Math.max(0, records.size() - limit * 3)) // 粗略预过滤
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
     @Data
     @Builder
     public static class AuditRecord {
@@ -42,5 +65,7 @@ public class AuditStore {
         private boolean requiresApproval;
         private ToolResult result;
         private long durationMs;
+        /** 调整前的参数快照（仅修改操作记录） */
+        private Map<String, Object> beforeSnapshot;
     }
 }

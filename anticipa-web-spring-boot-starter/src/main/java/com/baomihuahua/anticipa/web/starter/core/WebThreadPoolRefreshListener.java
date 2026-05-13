@@ -10,6 +10,7 @@ import com.baomihuahua.anticipa.spring.base.support.ApplicationContextHolder;
 import com.baomihuahua.anticipa.web.starter.core.executor.WebThreadPoolService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 
@@ -21,6 +22,7 @@ import java.util.Objects;
 /**
  * Web 线程池监听配置中心刷新事件
  */
+@Slf4j
 @RequiredArgsConstructor
 public class WebThreadPoolRefreshListener implements ApplicationListener<ThreadPoolConfigUpdateEvent> {
 
@@ -49,6 +51,11 @@ public class WebThreadPoolRefreshListener implements ApplicationListener<ThreadP
     @SneakyThrows
     private void sendWebThreadPoolConfigChangeMessage(WebThreadPoolBaseMetrics originalProperties,
                                                       BootstrapConfigProperties.WebThreadPoolExecutorConfig remoteProperties) {
+        if (remoteProperties.getNotify() == null || remoteProperties.getNotify().getReceives() == null) {
+            log.warn("[WebDynamicRefresh] Skip web thread pool change notification: 'anticipa.web.notify.receives' is not configured.");
+            return;
+        }
+
         Environment environment = ApplicationContextHolder.getBean(Environment.class);
         String activeProfile = environment.getProperty("spring.profiles.active", "dev");
         String applicationName = environment.getProperty("spring.application.name");

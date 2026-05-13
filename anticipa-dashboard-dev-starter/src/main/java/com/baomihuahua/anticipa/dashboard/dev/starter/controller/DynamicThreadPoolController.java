@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api/anticipa-dashboard")
 @RequiredArgsConstructor
 public class DynamicThreadPoolController {
 

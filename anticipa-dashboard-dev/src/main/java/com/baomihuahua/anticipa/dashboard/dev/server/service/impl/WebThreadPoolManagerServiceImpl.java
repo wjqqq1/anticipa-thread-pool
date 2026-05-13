@@ -14,8 +14,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.baomihuahua.anticipa.dashboard.dev.server.common.PageDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.common.PageReqDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.common.Result;
-import com.baomihuahua.anticipa.dashboard.dev.server.config.DashBoardConfigProperties;
 import com.baomihuahua.anticipa.dashboard.dev.server.config.AnticipaProperties;
+import com.baomihuahua.anticipa.dashboard.dev.server.config.DashBoardConfigProperties;
 import com.baomihuahua.anticipa.dashboard.dev.server.dto.WebThreadPoolDetailRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.dto.WebThreadPoolListReqDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.dto.WebThreadPoolStateRespDTO;
@@ -24,7 +24,6 @@ import com.baomihuahua.anticipa.dashboard.dev.server.remote.client.NacosProxyCli
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigDetailRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigListRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosConfigRespDTO;
-import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceListRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.service.WebThreadPoolManagerService;
 import com.baomihuahua.anticipa.dashboard.dev.server.service.handler.YamlConfigParser;
@@ -38,11 +37,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,38 +56,27 @@ public class WebThreadPoolManagerServiceImpl implements WebThreadPoolManagerServ
 
     @Override
     public PageDTO<WebThreadPoolDetailRespDTO> listThreadPoolPage(WebThreadPoolListReqDTO requestParam, PageReqDTO pageReq) {
-        String requestedNamespace = requestParam.getNamespace();
+        // 未传入 namespace 时默认查询 public 命名空间
+        String requestedNamespace = StrUtil.isBlank(requestParam.getNamespace()) ? "public" : requestParam.getNamespace();
         String requestedServiceName = requestParam.getServiceName();
 
-        // 如果指定了 namespace，直接使用 Nacos 分页查询
-        if (StrUtil.isNotBlank(requestedNamespace) && anticipaProperties.getNamespaces().contains(requestedNamespace)) {
-            NacosConfigListRespDTO nacosPage = nacosProxyClient.listConfigWithTotal(requestedNamespace, pageReq.getPage(), pageReq.getSize());
-            if (nacosPage == null || CollUtil.isEmpty(nacosPage.getPageItems())) {
-                return PageDTO.of(new ArrayList<>(), 0);
-            }
+        NacosConfigListRespDTO configResp = nacosProxyClient.listConfigWithTotal(
+                requestedNamespace, pageReq.getPage(), pageReq.getSize(), requestedServiceName);
 
-            List<WebThreadPoolDetailRespDTO> records = nacosPage.getPageItems().stream()
+        List<WebThreadPoolDetailRespDTO> results = new ArrayList<>();
+        if (CollUtil.isNotEmpty(configResp.getPageItems())) {
+            configResp.getPageItems().stream()
                     .filter(each -> StrUtil.isNotBlank(each.getAppName()))
                     .filter(each -> StrUtil.isBlank(requestedServiceName) || Objects.equals(each.getAppName(), requestedServiceName))
-                    .map(config -> buildWebThreadPoolDetail(requestedNamespace, config))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            return PageDTO.of(records, nacosPage.getTotalCount());
+                    .forEach(config -> {
+                        WebThreadPoolDetailRespDTO detail = buildWebThreadPoolDetail(requestedNamespace, config);
+                        if (detail != null) {
+                            results.add(detail);
+                        }
+                    });
         }
 
-        // 未指定 namespace：全量拉取后手动分页
-        List<WebThreadPoolDetailRespDTO> all = buildWebThreadPoolList(requestParam);
-        int offset = pageReq.getOffset();
-        int size = pageReq.getSize();
-        int total = all.size();
-
-        if (offset >= total) {
-            return PageDTO.of(new ArrayList<>(), total);
-        }
-
-        int toIndex = Math.min(offset + size, total);
-        return PageDTO.of(all.subList(offset, toIndex), total);
+        return PageDTO.of(results, results.size());
     }
 
     private List<WebThreadPoolDetailRespDTO> buildWebThreadPoolList(WebThreadPoolListReqDTO requestParam) {
@@ -104,7 +90,7 @@ public class WebThreadPoolManagerServiceImpl implements WebThreadPoolManagerServ
 
         List<WebThreadPoolDetailRespDTO> results = new ArrayList<>();
         namespaces.forEach(namespace -> {
-            List<NacosConfigRespDTO> nacosConfigResponse = nacosProxyClient.listConfig(namespace);
+            List<NacosConfigRespDTO> nacosConfigResponse = nacosProxyClient.listConfig(namespace, 1, 100);
             if (CollUtil.isNotEmpty(nacosConfigResponse)) {
                 nacosConfigResponse.stream()
                         .filter(each -> {
@@ -132,32 +118,44 @@ public class WebThreadPoolManagerServiceImpl implements WebThreadPoolManagerServ
             ConfigurationPropertySource sources = new MapConfigurationPropertySource(configInfoMap);
             Binder binder = new Binder(sources);
 
-            DashBoardConfigProperties refresherProperties;
-            try {
-                refresherProperties = binder
-                        .bind("anticipa", Bindable.of(DashBoardConfigProperties.class))
-                        .orElseThrow(() -> new IllegalArgumentException("anticipa config binding failed"));
-            } catch (Exception e) {
+            // 先尝试 anticipa 前缀，再尝试 onethread 前缀，最后尝试根层级（兼容无前缀的配置）
+            org.springframework.boot.context.properties.bind.BindResult<DashBoardConfigProperties> bound =
+                    binder.bind("anticipa", Bindable.of(DashBoardConfigProperties.class));
+            if (!bound.isBound()) {
+                bound = binder.bind("onethread", Bindable.of(DashBoardConfigProperties.class));
+            }
+            if (!bound.isBound()) {
+                bound = binder.bind("", Bindable.of(DashBoardConfigProperties.class));
+            }
+            if (!bound.isBound()) {
                 return null;
             }
+            DashBoardConfigProperties refresherProperties = bound.get();
 
-            NacosServiceListRespDTO service = nacosProxyClient.getService(namespace, config.getAppName());
             DashBoardConfigProperties.WebThreadPoolExecutorConfig webThreadPoolConfig = refresherProperties.getWeb();
-            if (service == null || CollUtil.isEmpty(service.getServiceList()) || webThreadPoolConfig == null) {
+            if (webThreadPoolConfig == null) {
                 return null;
             }
 
-            NacosServiceRespDTO nacosService = service.getServiceList().get(0);
+            List<NacosServiceRespDTO> instances = nacosProxyClient.listInstances(namespace, config.getAppName());
+            if (instances == null || instances.isEmpty()) {
+                return null;
+            }
+
+            NacosServiceRespDTO nacosService = instances.get(0);
             String networkAddress = nacosService.getIp() + ":" + nacosService.getPort();
 
-            Result<WebThreadPoolStateRespDTO> result;
+            String webContainerName = null;
             try {
-                String resultStr = HttpUtil.get("http://" + networkAddress + "/web/thread-pool", 1000);
-                result = JSON.parseObject(resultStr, new TypeReference<>() {});
+                String resultStr = HttpUtil.get("http://" + networkAddress + "/api/anticipa-dashboard/web/thread-pool", 1000);
+                Result<WebThreadPoolStateRespDTO> result = JSON.parseObject(resultStr, new TypeReference<>() {});
+                if (result != null && result.getData() != null) {
+                    webContainerName = result.getData().getWebContainerName();
+                }
             } catch (Exception e) {
-                return null;
+                // HTTP 调用失败时仍返回配置信息，仅 webContainerName 为空
+                System.out.println("HTTP 调用失败: " + e.getMessage());
             }
-            String webContainerName = result.getData().getWebContainerName();
 
             return WebThreadPoolDetailRespDTO.builder()
                     .webContainerName(webContainerName)
@@ -165,7 +163,7 @@ public class WebThreadPoolManagerServiceImpl implements WebThreadPoolManagerServ
                     .serviceName(config.getAppName())
                     .dataId(config.getDataId())
                     .group(config.getGroup())
-                    .instanceCount(service.getCount())
+                    .instanceCount(instances.size())
                     .corePoolSize(webThreadPoolConfig.getCorePoolSize())
                     .maximumPoolSize(webThreadPoolConfig.getMaximumPoolSize())
                     .keepAliveTime(webThreadPoolConfig.getKeepAliveTime())
@@ -187,12 +185,11 @@ public class WebThreadPoolManagerServiceImpl implements WebThreadPoolManagerServ
 
         Binder binder = new Binder(source);
         DashBoardConfigProperties anticipa = binder.bind("anticipa", Bindable.of(DashBoardConfigProperties.class))
-                .orElseThrow(() -> new RuntimeException("binding failed"));
+                .orElseGet(() -> binder.bind("onethread", Bindable.of(DashBoardConfigProperties.class))
+                        .orElseGet(() -> binder.bind("", Bindable.of(DashBoardConfigProperties.class))
+                                .orElseThrow(() -> new RuntimeException("binding failed"))));
 
         anticipa.setWeb(BeanUtil.toBean(requestParam, DashBoardConfigProperties.WebThreadPoolExecutorConfig.class));
-
-        Map<String, Object> updatedMap = new LinkedHashMap<>();
-        updatedMap.put("anticipa", anticipa);
 
         YAMLFactory factory = new YAMLFactory();
         factory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);

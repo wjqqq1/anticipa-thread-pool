@@ -5,43 +5,72 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 获取线程池的轻量级运行指标（无锁，适合高频调用）
+ */
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ThreadPoolBaseMetricsRespDTO {
 
-    private String ip;
-
-    private Integer port;
-
+    /**
+     * 线程池唯一标识
+     */
     private String threadPoolId;
 
+    /**
+     * 实例标识
+     */
+    private String networkAddress;
+
+    /**
+     * 核心线程数
+     */
     private Integer corePoolSize;
 
+    /**
+     * 最大线程数
+     */
     private Integer maximumPoolSize;
 
-    private Integer activeCount;
-
-    private Integer poolSize;
-
-    private Integer queueSize;
-
-    private Integer queueRemainingCapacity;
-
-    private Long completedTaskCount;
-
-    private Long taskCount;
-
-    private Integer largestPoolSize;
-
-    private String queueType;
-
-    private String rejectedExecutionHandler;
-
+    /**
+     * 线程空闲存活时间（单位：秒）
+     */
     private Long keepAliveTime;
 
-    private Boolean allowCoreThreadTimeOut;
+    /**
+     * 阻塞队列类型
+     */
+    private String workQueueName;
 
-    private Integer waitTaskCount;
+    /**
+     * 队列容量
+     */
+    private Integer workQueueCapacity;
+
+    /**
+     * 队列元素数量
+     */
+    private Integer workQueueSize;
+
+    /**
+     * 队列剩余容量
+     */
+    private Integer workQueueRemainingCapacity;
+
+    /**
+     * 拒绝策略
+     */
+    private String rejectedHandlerName;
+
+    /**
+     * 执行拒绝策略次数
+     */
+    private Long rejectCount;
+
+    /**
+     * 当前环境
+     */
+    private String activeProfile;
 }

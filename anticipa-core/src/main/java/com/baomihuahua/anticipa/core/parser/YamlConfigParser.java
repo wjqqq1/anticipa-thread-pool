@@ -6,6 +6,7 @@ import com.baomihuahua.anticipa.core.executor.support.RejectedPolicyTypeEnum;
 import com.baomihuahua.anticipa.core.executor.ThreadPoolExecutorProperties;
 import org.yaml.snakeyaml.Yaml;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +16,10 @@ import java.util.Map;
  */
 public class YamlConfigParser extends AbstractConfigParser {
 
-    private static final String EXECUTORS_KEY = "onethread.executors";
-    private static final String ENABLE_KEY = "onethread.enable";
-    private static final String CONFIG_FILE_TYPE_KEY = "onethread.config-file-type";
-    private static final String NOTIFY_PLATFORMS_KEY = "onethread.notify-platforms";
+    private static final String EXECUTORS_KEY = "anticipa.executors";
+    private static final String ENABLE_KEY = "anticipa.enable";
+    private static final String CONFIG_FILE_TYPE_KEY = "anticipa.config-file-type";
+    private static final String NOTIFY_PLATFORMS_KEY = "anticipa.notify-platforms";
 
     @Override
     public BootstrapConfigProperties parse(String content) {
@@ -47,6 +48,7 @@ public class YamlConfigParser extends AbstractConfigParser {
                 }
                 if (map.containsKey(EXECUTORS_KEY)) {
                     List<Map<String, Object>> executors = (List<Map<String, Object>>) map.get(EXECUTORS_KEY);
+                    List<ThreadPoolExecutorProperties> executorPropertiesList = new ArrayList<>();
                     for (Map<String, Object> executorMap : executors) {
                         ThreadPoolExecutorProperties properties = new ThreadPoolExecutorProperties();
                         properties.setThreadPoolId((String) executorMap.get("threadPoolId"));
@@ -79,8 +81,9 @@ public class YamlConfigParser extends AbstractConfigParser {
                             properties.setAlarm(alarmConfig);
                         }
 
-                        bootstrapConfigProperties.setExecutors(List.of(properties));
+                        executorPropertiesList.add(properties);
                     }
+                    bootstrapConfigProperties.setExecutors(executorPropertiesList);
                 }
             }
         }

@@ -1,18 +1,23 @@
 package com.baomihuahua.anticipa.agent;
 
 import com.alibaba.fastjson2.JSON;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ToolResult {
     private boolean success;
     private String summary;
     private Map<String, Object> data;
     private String rawJson;
+    private String toolCallId;
 
     public static ToolResult success(String summary, Object data) {
         return ToolResult.builder()

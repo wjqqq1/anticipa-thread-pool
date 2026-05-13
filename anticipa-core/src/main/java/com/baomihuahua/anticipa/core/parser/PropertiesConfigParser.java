@@ -15,7 +15,7 @@ import java.util.Properties;
  */
 public class PropertiesConfigParser extends AbstractConfigParser {
 
-    private static final String PREFIX = "onethread.executors.";
+    private static final String PREFIX = "anticipa.executors.";
 
     @Override
     public BootstrapConfigProperties parse(String content) {
@@ -26,7 +26,7 @@ public class PropertiesConfigParser extends AbstractConfigParser {
             properties.load(new StringReader(content));
 
             // 解析全局配置
-            String enable = properties.getProperty("onethread.enable");
+            String enable = properties.getProperty("anticipa.enable");
             if (enable != null) {
                 bootstrapConfigProperties.setEnable(Boolean.parseBoolean(enable));
             }

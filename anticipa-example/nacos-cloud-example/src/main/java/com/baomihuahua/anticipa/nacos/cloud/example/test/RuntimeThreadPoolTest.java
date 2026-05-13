@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class RuntimeThreadPoolTest {
 
-    private final ThreadPoolExecutor onethreadProducer;
-    private final ThreadPoolExecutor onethreadConsumer;
+    private final ThreadPoolExecutor anticipaProducer;
+    private final ThreadPoolExecutor anticipaConsumer;
     private final List<ScheduledExecutorService> burstSchedulers = new ArrayList<>();
 
     private static final int MAX_TASK = Integer.MAX_VALUE;
@@ -40,8 +40,8 @@ public class RuntimeThreadPoolTest {
         startTestSimulation();
 
         // 启动定时高压段调度
-        schedulePeriodicBurstTask(onethreadProducer, "onethreadProducer");
-        schedulePeriodicBurstTask(onethreadConsumer, "onethreadConsumer");
+        schedulePeriodicBurstTask(anticipaProducer, "anticipaProducer");
+        schedulePeriodicBurstTask(anticipaConsumer, "anticipaConsumer");
     }
 
     public void startTestSimulation() {
@@ -57,7 +57,7 @@ public class RuntimeThreadPoolTest {
         for (int i = 0; i < MAX_TASK; i++) {
             sleepRandom(1, 1000);
             try {
-                onethreadProducer.execute(() -> sleepRandom(200, 1000));
+                anticipaProducer.execute(() -> sleepRandom(200, 1000));
             } catch (Exception ignored) {
             }
         }
@@ -71,7 +71,7 @@ public class RuntimeThreadPoolTest {
         for (int i = 0; i < MAX_TASK; i++) {
             sleepRandom(100, 500);
             try {
-                onethreadConsumer.execute(() -> sleepRandom(200, 500));
+                anticipaConsumer.execute(() -> sleepRandom(200, 500));
             } catch (Exception ignored) {
             }
         }

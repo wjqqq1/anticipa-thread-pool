@@ -1,0 +1,325 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "title": "核心线程数 vs 当前线程数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "线程数",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "core_pool_size" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "maximum_pool_size" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "pool_size" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "active_count" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
+        ]
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_core_pool_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "core_pool_size", "refId": "A" },
+        { "expr": "dynamic_thread_pool_maximum_pool_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "maximum_pool_size", "refId": "B" },
+        { "expr": "dynamic_thread_pool_pool_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "pool_size", "refId": "C" },
+        { "expr": "dynamic_thread_pool_active_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "active_count", "refId": "D" }
+      ]
+    },
+    {
+      "title": "线程使用率",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0, "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_active_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"} / dynamic_thread_pool_maximum_pool_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"} * 100", "refId": "A" }
+      ]
+    },
+    {
+      "title": "历史最大线程数",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 3,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 100 }] }
+        }
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_largest_pool_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "队列使用情况",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "队列",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "queue_size" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "queue_capacity" }, "properties": [{ "id": "color", "value": { "fixedColor": "super-light-blue", "mode": "fixed" } }, { "id": "custom.fillBelowTo", "value": "queue_size" }] }
+        ]
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_queue_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "queue_size", "refId": "A" },
+        { "expr": "dynamic_thread_pool_queue_capacity{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "queue_capacity", "refId": "B" },
+        { "expr": "dynamic_thread_pool_queue_remaining_capacity{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "legendFormat": "queue_remaining", "refId": "C" }
+      ]
+    },
+    {
+      "title": "队列使用率",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "id": 5,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0, "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_queue_size{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"} / dynamic_thread_pool_queue_capacity{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"} * 100", "refId": "A" }
+      ]
+    },
+    {
+      "title": "拒绝数",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_reject_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "完成任务数（增速）",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 7,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "任务/秒",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "rate(dynamic_thread_pool_completed_task_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}[1m])", "legendFormat": "completed_task_rate", "refId": "A" }
+      ]
+    },
+    {
+      "title": "累计完成任务数",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "id": 8,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        { "expr": "dynamic_thread_pool_completed_task_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "拒绝数趋势",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "id": 9,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "拒绝数",
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 50,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "reject_rate" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+        ]
+      },
+      "targets": [
+        { "expr": "increase(dynamic_thread_pool_reject_count{application_name=\"$application_name\", dynamic_thread_pool_id=\"$dynamic_thread_pool_id\"}[1m])", "legendFormat": "reject_rate", "refId": "A" }
+      ]
+    },
+    {
+      "title": "概览",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 10,
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
+      "targets": [
+        { "expr": "dynamic_thread_pool_core_pool_size{application_name=\"$application_name\"}", "format": "table", "instant": true, "legendFormat": "", "refId": "A" },
+        { "expr": "dynamic_thread_pool_active_count{application_name=\"$application_name\"}", "format": "table", "instant": true, "legendFormat": "", "refId": "B" },
+        { "expr": "dynamic_thread_pool_queue_size{application_name=\"$application_name\"}", "format": "table", "instant": true, "legendFormat": "", "refId": "C" },
+        { "expr": "dynamic_thread_pool_queue_capacity{application_name=\"$application_name\"}", "format": "table", "instant": true, "legendFormat": "", "refId": "D" }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["anticipa", "thread-pool", "onethread"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "definition": "label_values(dynamic_thread_pool_active_count, application_name)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "应用名称",
+        "multi": false,
+        "name": "application_name",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(dynamic_thread_pool_active_count, application_name)", "refId": "VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "definition": "label_values(dynamic_thread_pool_active_count{application_name=\"$application_name\"}, dynamic_thread_pool_id)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "线程池 ID",
+        "multi": false,
+        "name": "dynamic_thread_pool_id",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(dynamic_thread_pool_active_count{application_name=\"$application_name\"}, dynamic_thread_pool_id)", "refId": "VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "hide": 2,
+        "includeAll": false,
+        "label": "数据源",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Anticipa 线程池健康度仪表盘",
+  "uid": "anticipa-threadpool",
+  "version": 1
+}

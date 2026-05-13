@@ -10,11 +10,9 @@ import com.baomihuahua.anticipa.dashboard.dev.server.service.WebThreadPoolManage
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,18 +20,19 @@ public class WebThreadPoolManagerController {
 
     private final WebThreadPoolManagerService webThreadPoolManagerService;
 
-    @GetMapping("/api/anticipa-dashboard/web/thread-pool/list")
-    public Result<List<WebThreadPoolDetailRespDTO>> listThreadPool(@Valid WebThreadPoolListReqDTO requestParam) {
-        return Result.success(webThreadPoolManagerService.listThreadPool(requestParam));
-    }
-
-    @GetMapping("/api/web/thread-pools")
+    /**
+     * 查询线程池集合
+     */
+    @GetMapping("/api/anticipa-dashboard/web/thread-pools")
     public Result<PageDTO<WebThreadPoolDetailRespDTO>> listThreadPoolPage(@Valid WebThreadPoolListReqDTO requestParam, PageReqDTO pageReq) {
         return Result.success(webThreadPoolManagerService.listThreadPoolPage(requestParam, pageReq));
     }
 
-    @PostMapping("/api/anticipa-dashboard/web/thread-pool/update")
-    public Result<Void> updateGlobalThreadPool(@RequestBody WebThreadPoolUpdateReqDTO requestParam) {
+    /**
+     * 更新线程池
+     */
+    @PutMapping("/api/anticipa-dashboard/web/thread-pool")
+    public Result<Void> updateGlobalThreadPool(@RequestBody @Valid WebThreadPoolUpdateReqDTO requestParam) {
         webThreadPoolManagerService.updateGlobalThreadPool(requestParam);
         return Result.success();
     }

@@ -32,9 +32,10 @@ public final class Results {
     /**
      * 创建一个默认错误码（-1）和 Internal error 消息的失败响应
      *
+     * @param <T> 数据类型（无数据返回，仅用于类型兼容）
      * @return 包含默认错误码和错误信息的 Result 对象
      */
-    public static Result<Void> failure() {
+    public static <T> Result<T> failure() {
         return failure("Internal error");
     }
 
@@ -42,11 +43,12 @@ public final class Results {
      * 创建一个默认错误码（-1）的失败响应
      *
      * @param message 错误提示信息
+     * @param <T>     数据类型（无数据返回，仅用于类型兼容）
      * @return 包含默认错误码和错误信息的 Result 对象
      */
-    public static Result<Void> failure(String message) {
+    public static <T> Result<T> failure(String message) {
         // 默认 -1 为异常码
-        return new Result<Void>().setCode("-1")
+        return new Result<T>().setCode("-1")
                 .setMessage(message);
     }
 
@@ -55,10 +57,11 @@ public final class Results {
      *
      * @param code    自定义错误码
      * @param message 错误提示信息
+     * @param <T>     数据类型（无数据返回，仅用于类型兼容）
      * @return 包含指定错误码和信息的 Result 对象
      */
-    public static Result<Void> failure(String code, String message) {
-        return new Result<Void>().setCode(code)
+    public static <T> Result<T> failure(String code, String message) {
+        return new Result<T>().setCode(code)
                 .setMessage(message);
     }
 }

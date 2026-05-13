@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NacosConfigRespDTO {
 
+    private String id;
+
     private String dataId;
 
     private String group;
@@ -22,4 +24,8 @@ public class NacosConfigRespDTO {
     private String type;
 
     private String content;
+
+    private String md5;
+
+    private Long lastModified;
 }

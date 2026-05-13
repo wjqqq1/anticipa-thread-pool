@@ -22,4 +22,6 @@ public class NacosConfigDetailRespDTO {
     private String md5;
 
     private String appName;
+
+    private Long modifyTime;
 }

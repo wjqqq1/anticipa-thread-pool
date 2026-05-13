@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="anticipa-web-spring-boot-starter" />
+        <module name="anticipa-common-spring-boot-starter" />
+        <module name="anticipa-spring-base" />
+        <module name="anticipa-core" />
+        <module name="anticipa-dashboard-dev-starter" />
+        <module name="anticipa-nacos-spring-boot-starter" />
+        <module name="anticipa-agent" />
+        <module name="anticipa-dashboard-dev" />
+        <module name="nacos-cloud-example" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>

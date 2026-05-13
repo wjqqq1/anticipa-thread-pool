@@ -33,8 +33,7 @@ public class AnticipaRegistry {
      * @param threadPoolId 线程池唯一标识
      * @return 线程池持有者对象
      */
-    public static ThreadPoolExecutorHolder getHolder(String threadPoolId) {
-        return HOLDER_MAP.get(threadPoolId);
+    public static ThreadPoolExecutorHolder getHolder(String threadPoolId) {return HOLDER_MAP.get(threadPoolId);
     }
 
     /**

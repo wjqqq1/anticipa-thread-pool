@@ -27,7 +27,7 @@ public class ThreadPoolConfigRefreshHandler {
     public void refreshConfig() {
         List<String> namespaces = anticipaProperties.getNamespaces();
         namespaces.forEach(namespace -> {
-            List<NacosConfigRespDTO> configs = nacosProxyClient.listConfig(namespace);
+            List<NacosConfigRespDTO> configs = nacosProxyClient.listConfig(namespace, 1, 10000);
             if (configs == null || configs.isEmpty()) {
                 return;
             }
@@ -36,7 +36,7 @@ public class ThreadPoolConfigRefreshHandler {
                     Map<Object, Object> configInfoMap = yamlConfigParser.doParse(config.getContent());
                     ConfigurationPropertySource sources = new MapConfigurationPropertySource(configInfoMap);
                     Binder binder = new Binder(sources);
-                    binder.bind("onethread", Bindable.of(DashBoardConfigProperties.class));
+                    binder.bind("anticipa", Bindable.of(DashBoardConfigProperties.class));
                 } catch (Exception e) {
                     log.error("Refresh config failed for dataId: {}, group: {}", config.getDataId(), config.getGroup(), e);
                 }

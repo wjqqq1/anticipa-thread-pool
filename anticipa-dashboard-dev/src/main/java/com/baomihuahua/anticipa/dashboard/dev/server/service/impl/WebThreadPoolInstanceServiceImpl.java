@@ -7,7 +7,7 @@ import com.baomihuahua.anticipa.dashboard.dev.server.common.Result;
 import com.baomihuahua.anticipa.dashboard.dev.server.dto.WebThreadPoolBaseMetricsRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.dto.WebThreadPoolStateRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.remote.client.NacosProxyClient;
-import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceListRespDTO;
+import com.baomihuahua.anticipa.dashboard.dev.server.remote.dto.NacosServiceRespDTO;
 import com.baomihuahua.anticipa.dashboard.dev.server.service.WebThreadPoolInstanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,17 +39,17 @@ public class WebThreadPoolInstanceServiceImpl implements WebThreadPoolInstanceSe
 
     @Override
     public List<WebThreadPoolBaseMetricsRespDTO> listBasicMetrics(String namespace, String serviceName) {
-        NacosServiceListRespDTO serviceListResponse = nacosProxyClient.getService(namespace, serviceName);
-        if (serviceListResponse == null || serviceListResponse.getCount() == 0) {
+        List<NacosServiceRespDTO> instances = nacosProxyClient.listInstances(namespace, serviceName);
+        if (instances == null || instances.isEmpty()) {
             return List.of();
         }
 
-        List<CompletableFuture<WebThreadPoolBaseMetricsRespDTO>> futures = serviceListResponse.getServiceList().stream()
+        List<CompletableFuture<WebThreadPoolBaseMetricsRespDTO>> futures = instances.stream()
                 .map(service -> CompletableFuture.supplyAsync(() -> {
                     try {
                         // 调用 DashBoard Starter 提供的内置接口，获取线程池运行信息
                         String networkAddress = service.getIp() + ":" + service.getPort();
-                        String resultStr = HttpUtil.get("http://" + networkAddress + "/web/thread-pool/basic-metrics");
+                        String resultStr = HttpUtil.get("http://" + networkAddress + "/api/anticipa-dashboard/web/thread-pool/basic-metrics");
                         Result<WebThreadPoolBaseMetricsRespDTO> result = JSON.parseObject(resultStr, new TypeReference<>() {
                         });
                         return result.getData();
@@ -68,7 +68,7 @@ public class WebThreadPoolInstanceServiceImpl implements WebThreadPoolInstanceSe
 
     @Override
     public WebThreadPoolStateRespDTO getRuntimeState(String networkAddress) {
-        String resultStr = HttpUtil.get("http://" + networkAddress + "/web/thread-pool");
+        String resultStr = HttpUtil.get("http://" + networkAddress + "/api/anticipa-dashboard/web/thread-pool");
         Result<WebThreadPoolStateRespDTO> result = JSON.parseObject(resultStr, new TypeReference<>() {
         });
         return result.getData();

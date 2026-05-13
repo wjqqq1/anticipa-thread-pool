@@ -6,6 +6,8 @@ import com.baomihuahua.anticipa.core.executor.AnticipaExecutor;
 import com.baomihuahua.anticipa.core.executor.AnticipaRegistry;
 import com.baomihuahua.anticipa.core.executor.ThreadPoolExecutorHolder;
 import com.baomihuahua.anticipa.core.executor.support.ResizableCapacityLinkedBlockingQueue;
+import com.baomihuahua.anticipa.core.notification.dto.ThreadPoolConfigChangeDTO;
+import com.baomihuahua.anticipa.core.notification.service.NotifierDispatcher;
 import com.baomihuahua.anticipa.dashboard.dev.starter.dto.*;
 import com.baomihuahua.anticipa.dashboard.dev.starter.store.AdjustHistoryStore;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +15,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,6 +37,12 @@ public class DynamicThreadPoolOperator {
     private String activeProfile;
 
     private final AdjustHistoryStore historyStore = new AdjustHistoryStore();
+
+    private final NotifierDispatcher notifierDispatcher;
+
+    public DynamicThreadPoolOperator(NotifierDispatcher notifierDispatcher) {
+        this.notifierDispatcher = notifierDispatcher;
+    }
 
     public InstanceInfoRespDTO getInstanceInfo() {
         return InstanceInfoRespDTO.builder()
@@ -87,13 +97,40 @@ public class DynamicThreadPoolOperator {
         ThreadPoolExecutor executor = holder.getExecutor();
         List<String> changedFields = new ArrayList<>();
 
-        if (request.getCorePoolSize() != null) {
-            executor.setCorePoolSize(request.getCorePoolSize());
-            changedFields.add("corePoolSize");
+        // 先确定最终目标值
+        Integer targetCore = request.getCorePoolSize();
+        Integer targetMax = request.getMaximumPoolSize();
+
+        // 参数校验
+        if (targetCore != null && targetCore <= 0) {
+            throw new IllegalArgumentException("corePoolSize 必须大于 0，当前值: " + targetCore);
         }
-        if (request.getMaximumPoolSize() != null) {
-            executor.setMaximumPoolSize(request.getMaximumPoolSize());
+        if (targetMax != null && targetMax <= 0) {
+            throw new IllegalArgumentException("maximumPoolSize 必须大于 0，当前值: " + targetMax);
+        }
+        // 同时传入时约束检查：corePoolSize 不能大于 maximumPoolSize
+        if (targetCore != null && targetMax != null && targetCore > targetMax) {
+            throw new IllegalArgumentException("corePoolSize(" + targetCore + ") 不能大于 maximumPoolSize(" + targetMax + ")");
+        }
+
+        // 按照正确的顺序设置，始终满足 corePoolSize <= maximumPoolSize 的约束：
+        // 1. 先设 maximumPoolSize（若新值 < 当前 corePoolSize，则先调小 corePoolSize）
+        // 2. 再设 corePoolSize（若新值 > 当前 maximumPoolSize，则先调大 maximumPoolSize）
+        if (targetMax != null) {
+            if (targetMax < executor.getCorePoolSize()) {
+                executor.setCorePoolSize(targetMax);
+                changedFields.add("corePoolSize(auto)");
+            }
+            executor.setMaximumPoolSize(targetMax);
             changedFields.add("maximumPoolSize");
+        }
+        if (targetCore != null) {
+            if (targetCore > executor.getMaximumPoolSize()) {
+                executor.setMaximumPoolSize(targetCore);
+                changedFields.add("maximumPoolSize(auto)");
+            }
+            executor.setCorePoolSize(targetCore);
+            changedFields.add("corePoolSize");
         }
         if (request.getKeepAliveTime() != null) {
             executor.setKeepAliveTime(request.getKeepAliveTime(), TimeUnit.SECONDS);
@@ -126,6 +163,9 @@ public class DynamicThreadPoolOperator {
         historyStore.record(threadPoolId, record);
 
         log.info("[ADJUST] {} - fields={}, before={}, after={}", threadPoolId, changedFields, before, after);
+
+        // 调整成功后发送钉钉变更通知
+        sendChangeNotification(threadPoolId, before, after);
 
         return AdjustResultDTO.builder()
                 .poolId(threadPoolId)
@@ -280,5 +320,64 @@ public class DynamicThreadPoolOperator {
             warnings.add("当前队列使用率 " + cur.getQueueUsageRate() + "% ，减小容量可能导致任务被拒绝");
         }
         return warnings;
+    }
+
+    /**
+     * 运行时调整成功后发送钉钉变更通知，与配置刷新变更通知使用相同的消息模板。
+     */
+    private void sendChangeNotification(String threadPoolId, AdjustSnapshotDTO before, AdjustSnapshotDTO after) {
+        try {
+            String identify = getLocalIp() + ":" + port;
+
+            // 从线程池运行时获取快照中缺失的字段
+            ThreadPoolExecutorHolder holder = getHolder(threadPoolId);
+            ThreadPoolExecutor executor = holder.getExecutor();
+            BlockingQueue<?> queue = executor.getQueue();
+            long keepAliveTime = executor.getKeepAliveTime(TimeUnit.SECONDS);
+            String queueType = queue.getClass().getSimpleName();
+            String rejectedHandler = executor.getRejectedExecutionHandler().getClass().getSimpleName();
+
+            // 安全获取 receives
+            String receives = null;
+            if (holder.getExecutorProperties() != null && holder.getExecutorProperties().getNotify() != null) {
+                receives = holder.getExecutorProperties().getNotify().getReceives();
+            }
+
+            Map<String, ThreadPoolConfigChangeDTO.ChangePair<?>> changes = new HashMap<>();
+            if (before.getCorePoolSize() != null && after.getCorePoolSize() != null
+                    && !before.getCorePoolSize().equals(after.getCorePoolSize())) {
+                changes.put("corePoolSize", new ThreadPoolConfigChangeDTO.ChangePair<>(before.getCorePoolSize(), after.getCorePoolSize()));
+            }
+            if (before.getMaximumPoolSize() != null && after.getMaximumPoolSize() != null
+                    && !before.getMaximumPoolSize().equals(after.getMaximumPoolSize())) {
+                changes.put("maximumPoolSize", new ThreadPoolConfigChangeDTO.ChangePair<>(before.getMaximumPoolSize(), after.getMaximumPoolSize()));
+            }
+            if (before.getQueueCapacity() != null && after.getQueueCapacity() != null
+                    && !before.getQueueCapacity().equals(after.getQueueCapacity())) {
+                changes.put("queueCapacity", new ThreadPoolConfigChangeDTO.ChangePair<>(before.getQueueCapacity(), after.getQueueCapacity()));
+            }
+
+            ThreadPoolConfigChangeDTO changeDTO = ThreadPoolConfigChangeDTO.builder()
+                    .applicationName(appName)
+                    .threadPoolId(threadPoolId)
+                    .identify(identify)
+                    .activeProfile(activeProfile)
+                    .corePoolSize(after.getCorePoolSize())
+                    .maximumPoolSize(after.getMaximumPoolSize())
+                    .keepAliveTime(keepAliveTime)
+                    .queueType(queueType)
+                    .queueCapacity(after.getQueueCapacity())
+                    .oldRejectedType(rejectedHandler)
+                    .rejectedType(rejectedHandler)
+                    .receives(receives)
+                    .changeTime(DateUtil.now())
+                    .changes(changes)
+                    .build();
+
+            notifierDispatcher.sendChangeMessage(changeDTO);
+            log.info("[ADJUST] sent change notification for pool {} on {}", threadPoolId, identify);
+        } catch (Exception e) {
+            log.warn("[ADJUST] failed to send change notification for pool {}: {}", threadPoolId, e.getMessage());
+        }
     }
 }

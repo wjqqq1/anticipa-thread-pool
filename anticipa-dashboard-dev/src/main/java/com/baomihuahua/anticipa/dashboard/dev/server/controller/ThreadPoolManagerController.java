@@ -10,11 +10,9 @@ import com.baomihuahua.anticipa.dashboard.dev.server.service.ThreadPoolManagerSe
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,18 +20,19 @@ public class ThreadPoolManagerController {
 
     private final ThreadPoolManagerService threadPoolManagerService;
 
-    @GetMapping("/api/anticipa-dashboard/thread-pool/list")
-    public Result<List<ThreadPoolDetailRespDTO>> listThreadPool(@Valid ThreadPoolListReqDTO requestParam) {
-        return Result.success(threadPoolManagerService.listThreadPool(requestParam));
-    }
-
-    @GetMapping("/api/thread-pools")
+    /**
+     * 查询线程池集合
+     */
+    @GetMapping("/api/anticipa-dashboard/thread-pools")
     public Result<PageDTO<ThreadPoolDetailRespDTO>> listThreadPoolPage(@Valid ThreadPoolListReqDTO requestParam, PageReqDTO pageReq) {
         return Result.success(threadPoolManagerService.listThreadPoolPage(requestParam, pageReq));
     }
 
-    @PostMapping("/api/anticipa-dashboard/thread-pool/update")
-    public Result<Void> updateGlobalThreadPool(@RequestBody ThreadPoolUpdateReqDTO requestParam) {
+    /**
+     * 更新线程池
+     */
+    @PutMapping("/api/anticipa-dashboard/thread-pool")
+    public Result<Void> updateGlobalThreadPool(@RequestBody @Valid ThreadPoolUpdateReqDTO requestParam) {
         threadPoolManagerService.updateGlobalThreadPool(requestParam);
         return Result.success();
     }

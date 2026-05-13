@@ -1,19 +1,13 @@
 package com.baomihuahua.anticipa.core.executor;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 /**
  * 线程池属性参数
  */
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
-@Accessors(chain = true)
 public class ThreadPoolExecutorProperties {
 
     /**
@@ -66,9 +60,13 @@ public class ThreadPoolExecutorProperties {
      */
     private AlarmConfig alarm = new AlarmConfig();
 
+    /**
+     * 业务场景类型（可选，使用 AI 模块时建议填写）
+     */
+    private BusinessType businessType;
+
     @Data
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class NotifyConfig {
 
         /**
@@ -84,7 +82,6 @@ public class ThreadPoolExecutorProperties {
 
     @Data
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class AlarmConfig {
 
         /**

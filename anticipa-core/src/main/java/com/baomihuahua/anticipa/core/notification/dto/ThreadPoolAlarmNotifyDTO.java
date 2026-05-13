@@ -124,6 +124,14 @@ public class ThreadPoolAlarmNotifyDTO {
     private Supplier<ThreadPoolAlarmNotifyDTO> supplier;
 
     /**
+     * 自定义消息内容（如 AI 分析报告）。
+     * <p>
+     * 设置后，通知服务将优先使用此内容发送，而不使用默认模板。
+     * </p>
+     */
+    private String customMessage;
+
+    /**
      * 设置延迟加载数据提供者
      *
      * @param supplier 数据提供者

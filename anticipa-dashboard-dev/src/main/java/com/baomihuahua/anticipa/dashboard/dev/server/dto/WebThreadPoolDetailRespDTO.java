@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,26 +19,23 @@ public class WebThreadPoolDetailRespDTO {
 
     private String group;
 
-    private Integer instanceCount;
-
     private String webContainerName;
 
     private Integer corePoolSize;
 
     private Integer maximumPoolSize;
 
-    private Integer keepAliveTime;
+    private Long keepAliveTime;
+
+    private Integer instanceCount;
 
     private NotifyConfig notify;
 
     @Data
-    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class NotifyConfig {
 
-        private List<String> notifyPlatforms;
-
-        private Integer interval;
+        private String receives;
     }
 }

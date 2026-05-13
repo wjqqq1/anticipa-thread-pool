@@ -1,12 +1,16 @@
 package com.baomihuahua.anticipa.agent.approval;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ApprovalDecision {
     private String requestId;
     private String userId;

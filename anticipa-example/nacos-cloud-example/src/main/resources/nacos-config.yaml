@@ -1,11 +1,11 @@
-# 在 Nacos 创建 data-id 为 {onethread.nacos.data-id} 和 {onethread.nacos.group} 的配置文件
+# 在 Nacos 创建 data-id 为 {anticipa.nacos.data-id} 和 {anticipa.nacos.group} 的配置文件
 # 并将下述配置复制到该文件中
-onethread:
+anticipa:
   nacos:
-    data-id: onethread-nacos-cloud-example-wjq.yaml
+    data-id: anticipa-nacos-cloud-example-wjq.yaml
     # data-id 和 spring.cloud.nacos.config.extension-configs[0].data-id 保持一致
     # 如果使用星球公用 Nacos，这里 xxx 改成 unique-name 值
-    # 比如我的 unique-name 为 -ding-ma，此处 data-id 就是 onethread-nacos-cloud-example-ding-ma.yaml
+    # 比如我的 unique-name 为 -ding-ma，此处 data-id 就是 anticipa-nacos-cloud-example-ding-ma.yaml
     group: DEFAULT_GROUP
   config-file-type: yaml
   web:
@@ -18,7 +18,7 @@ onethread:
     platform: DING
     url: 钉钉机器人完整Webhook，比如：https://oapi.dingtalk.com/robot/send?access_token=xxx
   executors:
-    - thread-pool-id: onethread-producer
+    - thread-pool-id: anticipa-producer
       core-pool-size: 12
       maximum-pool-size: 24
       keep-alive-time: 19999
@@ -33,7 +33,7 @@ onethread:
         enable: true
         queue-threshold: 80
         active-threshold: 80
-    - thread-pool-id: onethread-consumer
+    - thread-pool-id: anticipa-consumer
       core-pool-size: 10
       maximum-pool-size: 20
       keep-alive-time: 9999

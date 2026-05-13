@@ -1,10 +1,11 @@
 com\baomihuahua\anticipa\dashboard\dev\server\service\handler\YamlConfigParser.class
 com\baomihuahua\anticipa\dashboard\dev\server\remote\client\NacosProxyClient.class
+com\baomihuahua\anticipa\dashboard\dev\server\controller\AIChatController$1.class
 com\baomihuahua\anticipa\dashboard\dev\server\common\Result$ResultBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\WebThreadPoolInstanceServiceImpl$1.class
 com\baomihuahua\anticipa\dashboard\dev\server\remote\dto\NacosConfigDetailRespDTO.class
-com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolDetailRespDTO$NotifyConfig$NotifyConfigBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\ThreadPoolManagerServiceImpl.class
+com\baomihuahua\anticipa\dashboard\dev\server\config\AnticipaProperties$Grafana.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\ThreadPoolUpdateReqDTO$ThreadPoolUpdateReqDTOBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\common\PageReqDTO.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\WebThreadPoolInstanceServiceImpl.class
@@ -19,8 +20,10 @@ com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolDetailRespDTO.cla
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\ThreadPoolInstanceServiceImpl$2.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\ProjectService.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolStateRespDTO$WebThreadPoolStateRespDTOBuilder.class
+com\baomihuahua\anticipa\dashboard\dev\server\service\impl\ProjectServiceImpl$ProjectAggregate.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\ThreadPoolUpdateReqDTO.class
 com\baomihuahua\anticipa\dashboard\dev\server\remote\dto\NacosServiceListRespDTO$NacosServiceListRespDTOBuilder.class
+com\baomihuahua\anticipa\dashboard\dev\server\config\DashboardScheduledTaskAutoConfiguration.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolUpdateReqDTO.class
 com\baomihuahua\anticipa\dashboard\dev\server\config\DashBoardConfigProperties$WebThreadPoolExecutorConfig.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\ThreadPoolListReqDTO$ThreadPoolListReqDTOBuilder.class
@@ -41,6 +44,8 @@ com\baomihuahua\anticipa\dashboard\dev\server\common\PageReqDTO$PageReqDTOBuilde
 com\baomihuahua\anticipa\dashboard\dev\server\controller\ThreadPoolManagerController.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\WebThreadPoolInstanceService.class
 com\baomihuahua\anticipa\dashboard\dev\server\config\DashBoardConfigProperties.class
+com\baomihuahua\anticipa\dashboard\dev\server\controller\AIChatController.class
+com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolUpdateReqDTO$NotifyConfig.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\ThreadPoolInstanceServiceImpl.class
 com\baomihuahua\anticipa\dashboard\dev\server\common\Results$ResultsBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\controller\GrafanaController.class
@@ -56,6 +61,7 @@ com\baomihuahua\anticipa\dashboard\dev\server\controller\ProjectController.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolListReqDTO$WebThreadPoolListReqDTOBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\service\impl\ProjectServiceImpl.class
 com\baomihuahua\anticipa\dashboard\dev\server\common\PageDTO.class
+com\baomihuahua\anticipa\dashboard\dev\server\controller\ScheduledTaskController.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\ThreadPoolDetailRespDTO$AlarmConfig$AlarmConfigBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\WebThreadPoolDetailRespDTO$NotifyConfig.class
 com\baomihuahua\anticipa\dashboard\dev\server\config\GlobalExceptionHandler.class
@@ -82,3 +88,4 @@ com\baomihuahua\anticipa\dashboard\dev\server\config\DashBoardConfigProperties$W
 com\baomihuahua\anticipa\dashboard\dev\server\config\AnticipaProperties.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\UserLoginReqDTO$UserLoginReqDTOBuilder.class
 com\baomihuahua\anticipa\dashboard\dev\server\dto\ThreadPoolDetailRespDTO$NotifyConfig.class
+com\baomihuahua\anticipa\dashboard\dev\server\controller\AIChatController$ChatRequest.class

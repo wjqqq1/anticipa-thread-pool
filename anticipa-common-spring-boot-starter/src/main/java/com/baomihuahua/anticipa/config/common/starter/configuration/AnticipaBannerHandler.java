@@ -9,7 +9,7 @@ import org.springframework.boot.ansi.AnsiStyle;
 import org.springframework.boot.info.BuildProperties;
 
 /**
- * oneThread Banner 打印组件
+ * Anticipa Banner 打印组件
  */
 @Slf4j
 public class AnticipaBannerHandler implements InitializingBean {
@@ -27,10 +27,12 @@ public class AnticipaBannerHandler implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         String banner = """
-                                    _______ __                        __
-                .-----.-----.-----.|_     _|  |--.----.-----.---.-.--|  |
-                |  _  |     |  -__|  |   | |     |   _|  -__|  _  |  _  |
-                |_____|__|__|_____|  |___| |__|__|__| |_____|___._|_____|
+                       __  _      _            
+      ____ _____  / /_(_)____(_)___  ____ _
+     / __ `/ __ \\/ __/ / ___/ / __ \\/ __ `/
+    / /_/ / / / / /_/ / /__/ / /_/ / /_/ / 
+    \\__,_/_/ /_/\\__/_/\\___/_/ .___/\\__,_/  
+                           /_/              
                 
                 """;
         String bannerVersion = StrUtil.isNotEmpty(version) ? " (v" + version + ")" : "no version.";
